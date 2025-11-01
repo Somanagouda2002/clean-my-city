@@ -1,0 +1,204 @@
+<!-- templates/complaints/authority_dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Authority Dashboard - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Keep all your existing CSS styles */
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
+        border-left: 4px solid #3498db;
+    }
+
+    .stat-card.assigned { border-left-color: #3498db; }
+    .stat-card.in-progress { border-left-color: #f39c12; }
+    .stat-card.resolved { border-left-color: #27ae60; }
+    .stat-card.urgent { border-left-color: #e74c3c; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .complaint-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .complaint-card:hover {
+        border-color: #3498db;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .complaint-card.urgent {
+        border-color: #e74c3c;
+        background: #fdf2f2;
+    }
+
+    .distance-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        display: inline-block;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>👮 Authority Dashboard</h1>
+        <p>Welcome back, {{ user.username }}! Manage complaints in your area.</p>
+        {% if user.department %}
+        <p><strong>Department:</strong> {{ user.department }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card assigned">
+            <span class="stat-number">{{ stats.assigned_complaints }}</span>
+            <span class="stat-label">Assigned to You</span>
+        </div>
+        <div class="stat-card in-progress">
+            <span class="stat-number">{{ stats.in_progress_complaints }}</span>
+            <span class="stat-label">In Progress</span>
+        </div>
+        <div class="stat-card resolved">
+            <span class="stat-number">{{ stats.resolved_today }}</span>
+            <span class="stat-label">Resolved Today</span>
+        </div>
+        <div class="stat-card urgent">
+            <span class="stat-number">{{ stats.urgent_complaints }}</span>
+            <span class="stat-label">Urgent Nearby</span>
+        </div>
+    </div>
+
+    <!-- Nearby Complaints Section -->
+    <div class="complaints-section">
+        <div class="section-title">
+            <h2>📍 Complaints in Your Area</h2>
+            <div>
+                <small style="color: #666;">
+                    Showing complaints within 20km radius
+                </small>
+            </div>
+        </div>
+
+        <!-- Complaints List -->
+        <div id="complaintsList">
+            {% for complaint in assigned_complaints %}
+            <div class="complaint-card {% if complaint.urgency == 'high' or complaint.urgency == 'critical' %}urgent{% endif %}" 
+                 onclick="window.location='{% url 'complaint_detail' complaint.id %}'">
+                
+                <div class="complaint-header">
+                    <div style="flex: 1;">
+                        <div class="complaint-title">{{ complaint.title }}</div>
+                        <div class="complaint-location">
+                            📍 {{ complaint.location }}
+                            {% if complaint.distance %}
+                            <span class="distance-badge">{{ complaint.distance }} km away</span>
+                            {% endif %}
+                            {% if complaint.assigned_authority == user %}
+                            <span class="badge" style="background: #d4edda; color: #155724; margin-left: 0.5rem;">
+                                ✅ Assigned to you
+                            </span>
+                            {% elif complaint.assigned_authority %}
+                            <span class="badge" style="background: #fff3cd; color: #856404; margin-left: 0.5rem;">
+                                👤 {{ complaint.assigned_authority.username }}
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: #e3f2fd; color: #1976d2; margin-left: 0.5rem;">
+                                🔄 Unassigned
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge badge-status-{{ complaint.status }}">
+                            {{ complaint.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="complaint-meta">
+                    <span class="badge badge-category">{{ complaint.category.name }}</span>
+                    <span class="badge badge-urgency{% if complaint.urgency == 'high' or complaint.urgency == 'critical' %}-{{ complaint.urgency }}{% endif %}">
+                        {{ complaint.get_urgency_display }}
+                    </span>
+                    <span style="color: #666; font-size: 0.9rem;">
+                        ⏰ {{ complaint.created_at|timesince }} ago
+                    </span>
+                </div>
+
+                {% if complaint.description %}
+                <div style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                    {{ complaint.description|truncatewords:20 }}
+                </div>
+                {% endif %}
+
+                <div class="complaint-actions">
+                    <a href="{% url 'complaint_detail' complaint.id %}" class="btn-sm btn-view" onclick="event.stopPropagation()">
+                        👁️ View Details
+                    </a>
+                    {% if complaint.assigned_authority == user or not complaint.assigned_authority %}
+                    <a href="{% url 'update_complaint_status' complaint.id %}" class="btn-sm btn-update" onclick="event.stopPropagation()">
+                        {% if complaint.assigned_authority == user %}
+                        ✏️ Update Status
+                        {% else %}
+                        🎯 Take Assignment
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div>🎉</div>
+                <h3>No complaints in your area</h3>
+                <p>All complaints in your vicinity have been addressed. Great work!</p>
+                <p><small>Or there might be no complaints with location data nearby.</small></p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

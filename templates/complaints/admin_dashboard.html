@@ -1,0 +1,274 @@
+<!-- templates/complaints/admin_dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
+        border-left: 4px solid #3498db;
+    }
+
+    .stat-card.users { border-left-color: #9b59b6; }
+    .stat-card.complaints { border-left-color: #3498db; }
+    .stat-card.resolved { border-left-color: #27ae60; }
+    .stat-card.pending { border-left-color: #f39c12; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .admin-sections {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .admin-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .quick-actions {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #2c3e50;
+        transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+        background: #3498db;
+        color: white;
+        border-color: #3498db;
+        transform: translateY(-2px);
+    }
+
+    .action-icon {
+        font-size: 1.5rem;
+        width: 40px;
+        text-align: center;
+    }
+
+    .recent-activity {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 1rem;
+        border-left: 4px solid #3498db;
+        background: #f8f9fa;
+        margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .activity-title {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .activity-meta {
+        font-size: 0.875rem;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .chart-container {
+        height: 200px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        margin: 1rem 0;
+    }
+
+    .urgent-alerts {
+        background: #fdf2f2;
+        border: 2px solid #f8d7da;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .alert-header {
+        color: #721c24;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <h1>⚙️ Admin Dashboard</h1>
+        <p>Welcome back, {{ user.username }}! Manage the Clean My City platform.</p>
+    </div>
+
+    <!-- Quick Statistics -->
+    <div class="quick-stats">
+        <div class="stat-card users">
+            <span class="stat-number">{{ stats.total_users }}</span>
+            <span class="stat-label">Total Users</span>
+        </div>
+        <div class="stat-card complaints">
+            <span class="stat-number">{{ stats.total_complaints }}</span>
+            <span class="stat-label">Total Complaints</span>
+        </div>
+        <div class="stat-card resolved">
+            <span class="stat-number">{{ stats.resolved_complaints }}</span>
+            <span class="stat-label">Resolved Complaints</span>
+        </div>
+        <div class="stat-card pending">
+            <span class="stat-number">{{ stats.pending_complaints }}</span>
+            <span class="stat-label">Pending Approval</span>
+        </div>
+    </div>
+
+    <!-- Admin Sections -->
+    <div class="admin-sections">
+        <!-- Quick Actions -->
+        <div class="admin-card">
+            <h2 class="card-title">🚀 Quick Actions</h2>
+            <div class="quick-actions">
+                <a href="{% url 'admin_user_management' %}" class="action-btn">
+                    <span class="action-icon">👥</span>
+                    <span>Manage Users</span>
+                </a>
+                <a href="{% url 'generate_reports' %}" class="action-btn">
+                    <span class="action-icon">📊</span>
+                    <span>Generate Reports</span>
+                </a>
+                <a href="{% url 'admin_location_management' %}" class="action-btn">
+                    <span class="action-icon">📍</span>
+                    <span>Manage Locations</span>
+                </a>
+                <a href="{% url 'complaint_list' %}" class="action-btn">
+                    <span class="action-icon">📋</span>
+                    <span>View All Complaints</span>
+                </a>
+                <a href="/admin/" class="action-btn">
+                    <span class="action-icon">⚙️</span>
+                    <span>Django Admin</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="admin-card">
+            <h2 class="card-title">📈 Recent Activity</h2>
+            <div class="recent-activity">
+                {% for activity in recent_activity %}
+                <div class="activity-item">
+                    <div class="activity-title">{{ activity.complaint.title }}</div>
+                    <div class="activity-meta">
+                        <span>By {{ activity.authority.username }}</span>
+                        <span>{{ activity.created_at|timesince }} ago</span>
+                    </div>
+                    <div class="activity-meta">
+                        <span>Status: {{ activity.get_status_display }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; color: #666; padding: 2rem;">
+                    No recent activity
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- System Overview -->
+        <div class="admin-card">
+            <h2 class="card-title">📊 System Overview</h2>
+            <div class="chart-container">
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem;">📈</div>
+                    <p>Complaints Overview</p>
+                    <small>Resolved: {{ stats.resolved_complaints }} | Pending: {{ stats.pending_complaints }}</small>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 1.5rem; color: #27ae60;">{{ stats.citizen_users }}</div>
+                    <small>Citizens</small>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.5rem; color: #3498db;">{{ stats.authority_users }}</div>
+                    <small>Authorities</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Urgent Alerts -->
+    {% if urgent_complaints %}
+    <div class="urgent-alerts">
+        <div class="alert-header">⚠️ Urgent Complaints Needing Attention</div>
+        {% for complaint in urgent_complaints %}
+        <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+            <strong>{{ complaint.title }}</strong> - {{ complaint.location }}
+            <a href="{% url 'complaint_detail' complaint.id %}" style="margin-left: 1rem; color: #e74c3c;">View</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

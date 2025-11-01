@@ -1,0 +1,783 @@
+<!-- templates/users/profile.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.1);
+    }
+
+    .profile-info {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        border: 4px solid white;
+        backdrop-filter: blur(10px);
+    }
+
+    .user-details h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+    }
+
+    .user-role {
+        background: rgba(255,255,255,0.3);
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-left: 4px solid #3498db;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .stat-card.resolved { border-left-color: #27ae60; }
+    .stat-card.pending { border-left-color: #f39c12; }
+    .stat-card.progress { border-left-color: #3498db; }
+    .stat-card.rejected { border-left-color: #e74c3c; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 968px) {
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .profile-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f8f9fa;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .section-title h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .edit-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.3s;
+    }
+
+    .edit-btn:hover {
+        background: #2980b9;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: background 0.3s;
+    }
+
+    .info-item:hover {
+        background: #e9ecef;
+    }
+
+    .info-label {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .info-value {
+        color: #666;
+    }
+
+    .activity-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 1rem;
+        border-left: 4px solid #3498db;
+        background: #f8f9fa;
+        margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
+        transition: all 0.3s;
+    }
+
+    .activity-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .activity-item.resolved { border-left-color: #27ae60; }
+    .activity-item.pending { border-left-color: #f39c12; }
+    .activity-item.rejected { border-left-color: #e74c3c; }
+    .activity-item.updated { border-left-color: #3498db; }
+
+    .activity-title {
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-meta {
+        font-size: 0.875rem;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .badge-success { background: #d4edda; color: #155724; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .badge-danger { background: #f8d7da; color: #721c24; }
+    .badge-info { background: #d1ecf1; color: #0c5460; }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .chart-container {
+        height: 200px;
+        margin: 1rem 0;
+    }
+
+    .tab-navigation {
+        display: flex;
+        border-bottom: 2px solid #f8f9fa;
+        margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+        color: #3498db;
+        border-bottom-color: #3498db;
+        font-weight: bold;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .action-btn {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        padding: 1.5rem 1rem;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: #666;
+        display: block;
+    }
+
+    .action-btn:hover {
+        background: #e9ecef;
+        border-color: #3498db;
+        color: #3498db;
+        transform: translateY(-2px);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .avatar-upload {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        border: 4px solid #e9ecef;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .avatar-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-info">
+            <div class="avatar" id="userAvatar">
+                {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                {{ user.username|first|upper }}
+                {% endif %}
+            </div>
+            <div class="user-details">
+                <h1>{{ user.get_full_name|default:user.username }}</h1>
+                <div class="user-role">{{ user.get_role_display }}</div>
+                <p style="margin: 0; opacity: 0.9;">
+                    Member since {{ user.date_joined|date:"F Y" }}
+                    {% if user.last_login %}
+                    • Last active {{ user.last_login|timesince }} ago
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="profile-stats">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_complaints }}</span>
+            <span class="stat-label">Total Complaints</span>
+        </div>
+        <div class="stat-card resolved">
+            <span class="stat-number">{{ resolved_complaints }}</span>
+            <span class="stat-label">Resolved</span>
+        </div>
+        <div class="stat-card pending">
+            <span class="stat-number">{{ pending_complaints }}</span>
+            <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-card progress">
+            <span class="stat-number">{{ in_progress_complaints }}</span>
+            <span class="stat-label">In Progress</span>
+        </div>
+        {% if user.role == 'authority' %}
+        <div class="stat-card">
+            <span class="stat-number">{{ assigned_complaints }}</span>
+            <span class="stat-label">Assigned to You</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="profile-content">
+        <!-- Left Column -->
+        <div>
+            <!-- Personal Information -->
+            <div class="profile-section">
+                <div class="section-title">
+                    <h2>👤 Personal Information</h2>
+                    <button class="edit-btn" onclick="openEditModal()">Edit Profile</button>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Username</span>
+                        <span class="info-value">{{ user.username }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">{{ user.email }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phone</span>
+                        <span class="info-value">{{ user.phone_number|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Address</span>
+                        <span class="info-value">{{ user.address|default:"Not provided"|linebreaksbr }}</span>
+                    </div>
+                    {% if user.role == 'authority' %}
+                    <div class="info-item">
+                        <span class="info-label">Department</span>
+                        <span class="info-value">{{ user.department|default:"Not assigned" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="profile-section">
+                <div class="section-title">
+                    <h2>⚡ Quick Actions</h2>
+                </div>
+                
+                <div class="quick-actions">
+                    {% if user.role == 'citizen' %}
+                    <a href="{% url 'create_complaint' %}" class="action-btn">
+                        📝 Report Issue
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'authority' %}
+                    <a href="{% url 'complaint_list' %}?status=assigned" class="action-btn">
+                        📋 My Assignments
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'admin' %}
+                    <a href="{% url 'generate_reports' %}" class="action-btn">
+                        📊 View Reports
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'complaint_list' %}" class="action-btn">
+                        🗂️ All Complaints
+                    </a>
+                    
+                    <button class="action-btn" onclick="openEditModal()">
+                        ⚙️ Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <!-- Recent Activity -->
+            <div class="profile-section">
+                <div class="section-title">
+                    <h2>📈 Recent Activity</h2>
+                </div>
+                
+                <div class="tab-navigation">
+                    <button class="tab-btn active" onclick="switchTab('complaints')">My Complaints</button>
+                    <button class="tab-btn" onclick="switchTab('updates')">Updates</button>
+                    {% if user.role != 'citizen' %}
+                    <button class="tab-btn" onclick="switchTab('assigned')">Assigned</button>
+                    {% endif %}
+                </div>
+                
+                <div id="complaints-tab" class="tab-content active">
+                    <div class="activity-list">
+                        {% for complaint in recent_complaints %}
+                        <div class="activity-item {{ complaint.status }}">
+                            <div class="activity-title">
+                                {{ complaint.title }}
+                            </div>
+                            <div class="activity-meta">
+                                <span>{{ complaint.category.name }}</span>
+                                <span class="badge badge-{% if complaint.status == 'resolved' %}success{% elif complaint.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                    {{ complaint.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="activity-meta">
+                                <span>{{ complaint.created_at|date:"M d, Y" }}</span>
+                                <span>Urgency: {{ complaint.get_urgency_display }}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <div>📝</div>
+                            <h3>No complaints yet</h3>
+                            <p>
+                                {% if user.role == 'citizen' %}
+                                Start by reporting your first issue!
+                                {% else %}
+                                No complaints in the system yet.
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div id="updates-tab" class="tab-content">
+                    <div class="activity-list">
+                        {% for update in recent_updates %}
+                        <div class="activity-item updated">
+                            <div class="activity-title">
+                                {{ update.complaint.title }}
+                            </div>
+                            <div class="activity-meta">
+                                <span>Status: {{ update.get_status_display }}</span>
+                                <span class="badge badge-info">Updated</span>
+                            </div>
+                            <div class="activity-meta">
+                                <span>By {{ update.authority.username }}</span>
+                                <span>{{ update.created_at|timesince }} ago</span>
+                            </div>
+                            {% if update.notes %}
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">
+                                {{ update.notes }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <div>🔄</div>
+                            <h3>No updates yet</h3>
+                            <p>Activity updates will appear here.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {% if user.role != 'citizen' %}
+                <div id="assigned-tab" class="tab-content">
+                    <div class="activity-list">
+                        {% for complaint in assigned_complaints_list %}
+                        <div class="activity-item {{ complaint.status }}">
+                            <div class="activity-title">
+                                {{ complaint.title }}
+                            </div>
+                            <div class="activity-meta">
+                                <span>By {{ complaint.citizen.username }}</span>
+                                <span class="badge badge-{% if complaint.status == 'resolved' %}success{% elif complaint.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                    {{ complaint.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="activity-meta">
+                                <span>{{ complaint.location|truncatewords:3 }}</span>
+                                <span>{{ complaint.created_at|date:"M d" }}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <div>📋</div>
+                            <h3>No assigned complaints</h3>
+                            <p>You don't have any assigned complaints at the moment.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Performance Chart (Placeholder) -->
+            <div class="profile-section">
+                <div class="section-title">
+                    <h2>📊 Monthly Activity</h2>
+                </div>
+                <div class="chart-container" id="activityChart">
+                    <div style="text-align: center; padding: 3rem; color: #666;">
+                        <div>📈</div>
+                        <p>Activity chart will be displayed here</p>
+                        <small>Showing complaints and resolutions over time</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="section-title">
+            <h2>Edit Profile</h2>
+            <button onclick="closeEditModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+        </div>
+        
+        <form method="post" id="profileForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="avatar-upload">
+                <div class="avatar-preview" onclick="document.getElementById('avatarInput').click()">
+                    {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="Current avatar" id="avatarPreview">
+                    {% else %}
+                    <div id="avatarPreview">{{ user.username|first|upper }}</div>
+                    {% endif %}
+                </div>
+                <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                <div style="font-size: 0.875rem; color: #666;">Click to change photo</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" name="phone_number" class="form-control" value="{{ user.phone_number|default:'' }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <textarea name="address" class="form-control" rows="3">{{ user.address|default:'' }}</textarea>
+            </div>
+            
+            {% if user.role == 'authority' %}
+            <div class="form-group">
+                <label class="form-label">Department</label>
+                <input type="text" name="department" class="form-control" value="{{ user.department|default:'' }}">
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btn" onclick="closeEditModal()" style="flex: 1;">Cancel</button>
+                <button type="submit" class="btn btn-success" style="flex: 1;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab navigation
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+        
+        // Activate selected button
+        event.target.classList.add('active');
+    }
+    
+    // Modal functions
+    function openEditModal() {
+        document.getElementById('editModal').style.display = 'flex';
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+    
+    // Avatar preview
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatarPreview');
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    // Form submission with loading state
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '🔄 Saving...';
+        submitBtn.disabled = true;
+        
+        // Form will submit normally, this is just for UX
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeEditModal();
+        }
+        if (e.ctrlKey && e.key === 'e') {
+            e.preventDefault();
+            openEditModal();
+        }
+    });
+    
+    // Initialize any charts or additional features
+    document.addEventListener('DOMContentLoaded', function() {
+        // You can initialize charts here using Chart.js or other libraries
+        console.log('Profile page loaded');
+        
+        // Add some interactive elements
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const statType = this.classList[1]; // resolved, pending, etc.
+                // You could filter the activity list based on the stat clicked
+                console.log('Filter by:', statType);
+            });
+        });
+    });
+</script>
+{% endblock %}

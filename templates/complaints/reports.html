@@ -1,0 +1,351 @@
+{% extends 'complaints/base.html' %}
+{% load static %}
+
+{% block title %}Reports - Clean My City{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Complaint Reports & Analytics</h1>
+            <p class="text-muted mb-0">Comprehensive overview of complaint statistics and trends</p>
+        </div>
+        <div>
+            {% if user.role == 'admin' %}
+                <a href="{% url 'advanced_reports' %}" class="btn btn-primary">
+                    <i class="fas fa-chart-line me-1"></i>Advanced Reports
+                </a>
+            {% endif %}
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print me-1"></i>Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Complaints
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ total_complaints }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Resolved Complaints
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ resolved_complaints }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Complaints
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ pending_complaints }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                In Progress
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ in_progress_complaints }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-spinner fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Status Distribution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Complaints by Status</h6>
+                </div>
+                <div class="card-body">
+                    {% if complaints_by_status %}
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="statusChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="mt-4 text-center small">
+                            {% for item in complaints_by_status %}
+                                <span class="mr-3">
+                                    <i class="fas fa-circle" style="color: {{ item.color }}"></i> 
+                                    {{ item.status }} ({{ item.count }})
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No status data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Distribution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Complaints by Category</h6>
+                </div>
+                <div class="card-body">
+                    {% if complaints_by_category %}
+                        <div class="chart-bar pt-4 pb-2">
+                            <canvas id="categoryChart" width="400" height="200"></canvas>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No category data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Urgency Distribution -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Complaints by Urgency</h6>
+                </div>
+                <div class="card-body">
+                    {% if complaints_by_urgency %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Urgency Level</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in complaints_by_urgency %}
+                                    <tr>
+                                        <td>
+                                            <span class="urgency-badge urgency-{{ item.urgency|lower }}">
+                                                {{ item.urgency }}
+                                            </span>
+                                        </td>
+                                        <td>{{ item.count }}</td>
+                                        <td>
+                                            {% widthratio item.count total_complaints 100 %}%
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No urgency data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                    <a href="{% url 'complaint_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_complaints %}
+                        <div class="list-group list-group-flush">
+                            {% for complaint in recent_complaints %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'complaint_detail' complaint.id %}" class="text-decoration-none">
+                                                {{ complaint.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="mb-1 text-muted small">{{ complaint.description|truncatewords:10 }}</p>
+                                        <small class="text-muted">
+                                            {{ complaint.created_at|timesince }} ago • 
+                                            <span class="status-badge status-{{ complaint.status }}">
+                                                {{ complaint.get_status_display }}
+                                            </span>
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-secondary">#{{ complaint.id }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No recent complaints</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Monthly Complaint Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="monthlyTrendChart" width="400" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Status Distribution Pie Chart
+{% if complaints_by_status %}
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [
+            {% for item in complaints_by_status %}
+                '{{ item.status }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            data: [
+                {% for item in complaints_by_status %}
+                    {{ item.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: [
+                '#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545', '#6c757d'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+{% endif %}
+
+// Category Distribution Bar Chart
+{% if complaints_by_category %}
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+const categoryChart = new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for item in complaints_by_category %}
+                '{{ item.category__name }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Complaints',
+            data: [
+                {% for item in complaints_by_category %}
+                    {{ item.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: '#4e73df',
+            borderColor: '#2e59d9',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// CSS for badges (same as complaint_detail.html)
+<style>
+.status-badge, .urgency-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.status-pending { background-color: #fff3cd; color: #856404; }
+.status-approved { background-color: #d1ecf1; color: #0c5460; }
+.status-assigned { background-color: #d1ecf1; color: #0c5460; }
+.status-in_progress { background-color: #cce7ff; color: #004085; }
+.status-resolved { background-color: #d4edda; color: #155724; }
+.status-rejected { background-color: #f8d7da; color: #721c24; }
+
+.urgency-low { background-color: #d4edda; color: #155724; }
+.urgency-medium { background-color: #fff3cd; color: #856404; }
+.urgency-high { background-color: #f8d7da; color: #721c24; }
+.urgency-critical { background-color: #721c24; color: white; }
+</style>
+</script>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complaint #{{ complaint.id }} - Clean My City{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Complaint #{{ complaint.id }}</h1>
+            <p class="text-muted mb-0">{{ complaint.title }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if user.role == 'citizen' and complaint.citizen == user %}
+                {% if complaint.status == 'resolved' and not feedback %}
+                    <a href="{% url 'submit_feedback' complaint.id %}" class="btn btn-success">
+                        <i class="fas fa-star me-1"></i>Submit Feedback
+                    </a>
+                {% endif %}
+            {% endif %}
+            
+            {% if user.role == 'authority' and complaint.assigned_authority == user or user.role == 'admin' %}                <a href="{% url 'update_complaint_status' complaint.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>Update Status
+                </a>
+            {% endif %}
+            
+            <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Complaint Details -->
+        <div class="col-lg-8">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Complaint Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="status-badge status-{{ complaint.status }} mb-2">
+                                    {{ complaint.get_status_display }}
+                                </div>
+                                <small class="text-muted">Current Status</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="urgency-badge urgency-{{ complaint.urgency }} mb-2">
+                                    {{ complaint.get_urgency_display }}
+                                </div>
+                                <small class="text-muted">Priority</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="mb-1">{{ complaint.created_at|date:"M d, Y" }}</h4>
+                                <small class="text-muted">Submitted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="mb-1">{{ complaint.updated_at|date:"M d, Y" }}</h4>
+                                <small class="text-muted">Last Updated</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaint Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Complaint Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Category:</strong>
+                            <span class="badge bg-secondary">{{ complaint.category.name }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Location:</strong>
+                            {{ complaint.location }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p class="mt-1">{{ complaint.description }}</p>
+                    </div>
+                    
+                    {% if complaint.photo %}
+                    <div class="mb-3">
+                        <strong>Photo Evidence:</strong>
+                        <div class="mt-2">
+                            <img src="{{ complaint.photo.url }}" alt="Complaint Photo" 
+                                 class="img-fluid rounded" style="max-height: 300px;">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if complaint.latitude and complaint.longitude %}
+                    <div>
+                        <strong>Location Coordinates:</strong>
+                        <p class="text-muted mb-0">
+                            {{ complaint.latitude }}, {{ complaint.longitude }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Updates Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Status Updates</h5>
+                </div>
+                <div class="card-body">
+                    {% if updates %}
+                        <div class="timeline">
+                            {% for update in updates %}
+                            <div class="timeline-item {% if forloop.first %}current{% endif %}">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-1">{{ update.get_status_display }}</h6>
+                                        <small class="text-muted">{{ update.created_at|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    {% if update.notes %}
+                                        <p class="mb-1">{{ update.notes }}</p>
+                                    {% endif %}
+                                    {% if update.authority %}
+                                        <small class="text-muted">
+                                            Updated by: {{ update.authority.get_full_name|default:update.authority.username }}
+                                        </small>
+                                    {% endif %}
+                                    {% if update.proof_image %}
+                                        <div class="mt-2">
+                                            <strong>Proof Image:</strong>
+                                            <img src="{{ update.proof_image.url }}" alt="Proof" 
+                                                 class="img-thumbnail mt-1" style="max-height: 150px;">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No status updates yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Sidebar -->
+        <div class="col-lg-4">
+            <!-- Citizen Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Citizen Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>Name:</strong> 
+                        {{ complaint.citizen.get_full_name|default:complaint.citizen.username }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Email:</strong> {{ complaint.citizen.email }}
+                    </p>
+                    <p class="mb-0">
+                        <strong>Phone:</strong> 
+                        {{ complaint.citizen.phone|default:"Not provided" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Assigned Authority -->
+            {% if complaint.assigned_authority %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Assigned Authority</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>Name:</strong> 
+                        {{ complaint.assigned_authority.get_full_name|default:complaint.assigned_authority.username }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Email:</strong> {{ complaint.assigned_authority.email }}
+                    </p>
+                    <p class="mb-0">
+                        <strong>Department:</strong> 
+                        {{ complaint.assigned_authority.department|default:"Not specified" }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Feedback -->
+            {% if feedback %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Citizen Feedback</h5>
+                </div>
+                <div class="card-body">
+                    <div class="rating mb-2">
+                        {% for i in "12345" %}
+                            <i class="fas fa-star {% if forloop.counter <= feedback.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    {% if feedback.comments %}
+                        <p class="mb-1"><strong>Comments:</strong></p>
+                        <p class="text-muted">{{ feedback.comments }}</p>
+                    {% endif %}
+                    <small class="text-muted">
+                        Submitted on {{ feedback.created_at|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-pending { background-color: #fff3cd; color: #856404; }
+.status-approved { background-color: #d1ecf1; color: #0c5460; }
+-status-assigned { background-color: #d1ecf1; color: #0c5460; }
+.status-in_progress { background-color: #cce7ff; color: #004085; }
+.status-resolved { background-color: #d4edda; color: #155724; }
+.status-rejected { background-color: #f8d7da; color: #721c24; }
+
+.urgency-badge {
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.875rem;
+    font-weight: bold;
+}
+
+.urgency-low { background-color: #d4edda; color: #155724; }
+.urgency-medium { background-color: #fff3cd; color: #856404; }
+.urgency-high { background-color: #f8d7da; color: #721c24; }
+.urgency-critical { background-color: #721c24; color: white; }
+
+.timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+    border-left: 2px solid #dee2e6;
+}
+
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -8px;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #6c757d;
+}
+
+.timeline-item.current .timeline-marker {
+    background-color: #007bff;
+}
+
+.timeline-content {
+    padding-left: 20px;
+}
+
+.rating {
+    font-size: 1.2rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Submit Feedback - Clean My City{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">Submit Feedback</h4>
+                            <p class="mb-0">Share your experience with the resolution</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-light text-primary fs-6">Complaint #{{ complaint.id }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaint Summary -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Complaint Details</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Title:</strong> {{ complaint.title }}</p>
+                            <p><strong>Category:</strong> <span class="badge bg-secondary">{{ complaint.category.name }}</span></p>
+                            <p><strong>Location:</strong> {{ complaint.location }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Submitted:</strong> {{ complaint.created_at|date:"M d, Y" }}</p>
+                            <p><strong>Resolved:</strong> {{ complaint.updated_at|date:"M d, Y" }}</p>
+                            <p>
+                                <strong>Status:</strong> 
+                                <span class="status-badge status-resolved">Resolved</span>
+                            </p>
+                        </div>
+                    </div>
+                    {% if complaint.description %}
+                    <div class="mt-3">
+                        <strong>Description:</strong>
+                        <p class="text-muted">{{ complaint.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Feedback Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Your Feedback</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="feedbackForm">
+                        {% csrf_token %}
+                        
+                        <!-- Rating Section -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Overall Satisfaction Rating *</label>
+                            <p class="text-muted small">How satisfied are you with the resolution of your complaint?</p>
+                            
+                            <div class="rating-input mb-3">
+                                <div class="d-flex justify-content-center">
+                                    {% for i in "12345" %}
+                                    <div class="rating-star mx-2">
+                                        <input type="radio" id="star{{ forloop.counter }}" name="rating" value="{{ forloop.counter }}" 
+                                               class="d-none" {% if form.rating.value == forloop.counter %}checked{% endif %}>
+                                        <label for="star{{ forloop.counter }}" class="star-label">
+                                            <i class="fas fa-star fa-2x"></i>
+                                            <span class="rating-text">{{ forloop.counter }} Star</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="rating-labels text-center mt-2">
+                                    <small class="text-muted">
+                                        <span class="me-3">Poor</span>
+                                        <span>Excellent</span>
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            {% if form.rating.errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.rating.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Comments Section -->
+                        <div class="mb-4">
+                            <label for="{{ form.comments.id_for_label }}" class="form-label fw-bold">
+                                Additional Comments
+                            </label>
+                            <p class="text-muted small">Share any additional thoughts about the service quality, response time, or resolution effectiveness.</p>
+                            
+                            <textarea name="{{ form.comments.name }}" id="{{ form.comments.id_for_label }}" 
+                                      class="form-control {% if form.comments.errors %}is-invalid{% endif %}" 
+                                      rows="5" placeholder="Tell us about your experience...">{{ form.comments.value|default:'' }}</textarea>
+                            
+                            {% if form.comments.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.comments.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="form-text">
+                                Your feedback helps us improve our services for everyone.
+                            </div>
+                        </div>
+
+                        <!-- Resolution Quality -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Resolution Quality</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="resolution_quality" value="timely" id="timely">
+                                        <label class="form-check-label" for="timely">
+                                            Resolved in a timely manner
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="resolution_quality" value="effective" id="effective">
+                                        <label class="form-check-label" for="effective">
+                                            Effective solution provided
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="resolution_quality" value="professional" id="professional">
+                                        <label class="form-check-label" for="professional">
+                                            Professional service
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="resolution_quality" value="communication" id="communication">
+                                        <label class="form-check-label" for="communication">
+                                            Good communication
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Would Recommend -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Would you recommend our services to others?</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="would_recommend" id="recommend_yes" value="yes" autocomplete="off">
+                                <label class="btn btn-outline-success" for="recommend_yes">
+                                    <i class="fas fa-thumbs-up me-2"></i>Yes
+                                </label>
+
+                                <input type="radio" class="btn-check" name="would_recommend" id="recommend_no" value="no" autocomplete="off">
+                                <label class="btn btn-outline-danger" for="recommend_no">
+                                    <i class="fas fa-thumbs-down me-2"></i>No
+                                </label>
+
+                                <input type="radio" class="btn-check" name="would_recommend" id="recommend_maybe" value="maybe" autocomplete="off">
+                                <label class="btn btn-outline-warning" for="recommend_maybe">
+                                    <i class="fas fa-meh me-2"></i>Maybe
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Complaint
+                            </a>
+                            
+                            <div>
+                                <button type="reset" class="btn btn-outline-danger me-2">
+                                    <i class="fas fa-redo me-2"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Text -->
+            <div class="alert alert-info mt-4">
+                <div class="d-flex">
+                    <i class="fas fa-info-circle fa-2x me-3 text-primary"></i>
+                    <div>
+                        <h6 class="alert-heading">Why Your Feedback Matters</h6>
+                        <p class="mb-0">Your feedback helps us improve our services and ensure better response times and resolution quality for all citizens in our community.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-star {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.star-label {
+    cursor: pointer;
+    color: #ddd;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.star-label:hover {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.rating-star input:checked + .star-label {
+    color: #ffc107;
+}
+
+.rating-star input:checked + .star-label ~ .rating-star .star-label {
+    color: #ffc107;
+}
+
+.rating-text {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.875rem;
+}
+
+.status-resolved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.btn-check:checked + .btn {
+    border-color: #0d6efd;
+    background-color: #0d6efd;
+    color: white;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border: 1px solid #e3e6f0;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Star rating interaction
+    const stars = document.querySelectorAll('.rating-star input');
+    const starLabels = document.querySelectorAll('.star-label');
+    
+    stars.forEach((star, index) => {
+        star.addEventListener('change', function() {
+            // Update all stars up to the selected one
+            starLabels.forEach((label, labelIndex) => {
+                if (labelIndex <= index) {
+                    label.style.color = '#ffc107';
+                } else {
+                    label.style.color = '#ddd';
+                }
+            });
+        });
+    });
+    
+    // Form validation
+    const form = document.getElementById('feedbackForm');
+    form.addEventListener('submit', function(e) {
+        const rating = document.querySelector('input[name="rating"]:checked');
+        if (!rating) {
+            e.preventDefault();
+            alert('Please select a rating before submitting your feedback.');
+            return false;
+        }
+    });
+    
+    // Reset form handler
+    form.addEventListener('reset', function() {
+        // Reset star colors
+        starLabels.forEach(label => {
+            label.style.color = '#ddd';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,164 @@
+<!-- templates/complaints/admin_edit_user.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit User - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin: 2rem auto;
+        max-width: 600px;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .status-active { background: #d4edda; color: #155724; }
+    .status-inactive { background: #f8d7da; color: #721c24; }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-deactivate { background: #e74c3c; color: white; }
+    .btn-activate { background: #27ae60; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>✏️ Edit User: {{ user.username }}</h1>
+        <p>Update user information and permissions</p>
+    </div>
+
+    <div class="auth-card">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Display form errors at the top -->
+            {% if form.errors %}
+            <div style="background: #fdf2f2; color: #721c24; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <strong>Please correct the following errors:</strong>
+                <ul style="margin: 0.5rem 0 0 1rem;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="id_first_name" class="form-label">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_last_name" class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_username" class="form-label">Username</label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_email" class="form-label">Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_role" class="form-label">Role</label>
+                {{ form.role }}
+            </div>
+
+            <div class="form-group" id="departmentField" style="{% if user.role != 'authority' %}display: none;{% endif %}">
+                <label for="id_department" class="form-label">Department</label>
+                {{ form.department }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_phone_number" class="form-label">Phone Number</label>
+                {{ form.phone_number }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_address" class="form-label">Address</label>
+                {{ form.address }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Account Status</label>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span class="status-badge status-{% if user.is_active %}active{% else %}inactive{% endif %}">
+                        {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                    <form method="post" action="{% url 'admin_toggle_user' user.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-sm {% if user.is_active %}btn-deactivate{% else %}btn-activate{% endif %}" 
+                               onclick="return confirm('Are you sure you want to {% if user.is_active %}deactivate{% else %}activate{% endif %} this user?')">
+                            {% if user.is_active %}🚫 Deactivate{% else %}✅ Activate{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <a href="{% url 'admin_user_management' %}" class="btn" style="background: #95a5a6; color: white; flex: 1;">Cancel</a>
+                <button type="submit" class="btn btn-success" style="flex: 1;">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Show/hide department field based on role
+    document.getElementById('id_role').addEventListener('change', function() {
+        const departmentField = document.getElementById('departmentField');
+        if (this.value === 'authority') {
+            departmentField.style.display = 'block';
+        } else {
+            departmentField.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

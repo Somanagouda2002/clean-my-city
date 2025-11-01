@@ -1,0 +1,456 @@
+<!-- templates/users/login.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 450px;
+        margin: 4rem auto;
+        padding: 0 1rem;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .auth-title {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+
+    .auth-subtitle {
+        color: #666;
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3498db;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .form-control.error {
+        border-color: #e74c3c;
+        background: #fdf2f2;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #2980b9 0%, #2573a7 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .auth-link {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .auth-link:hover {
+        text-decoration: underline;
+    }
+
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .forgot-password {
+        color: #3498db;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .forgot-password:hover {
+        text-decoration: underline;
+    }
+
+    .demo-accounts {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border-left: 4px solid #3498db;
+    }
+
+    .demo-title {
+        color: #2c3e50;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .demo-account {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .demo-account:hover {
+        border-color: #3498db;
+        background: #e3f2fd;
+    }
+
+    .demo-account:last-child {
+        margin-bottom: 0;
+    }
+
+    .demo-role {
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    .demo-credentials {
+        font-size: 0.8rem;
+        color: #666;
+        font-family: monospace;
+    }
+
+    .input-with-icon {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        cursor: pointer;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid;
+    }
+
+    .alert-error {
+        background: #fdf2f2;
+        border-color: #e74c3c;
+        color: #721c24;
+    }
+
+    .alert-info {
+        background: #e8f4fd;
+        border-color: #3498db;
+        color: #0c5460;
+    }
+
+    @media (max-width: 480px) {
+        .auth-container {
+            margin: 2rem auto;
+        }
+
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .form-options {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Header -->
+        <div class="auth-header">
+            <div class="auth-icon">🏙️</div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to your Clean My City account</p>
+        </div>
+
+        <!-- Display Messages -->
+        {% if form.errors %}
+        <div class="alert alert-error">
+            ⚠️ Please enter a correct username and password. Note that both fields may be case-sensitive.
+        </div>
+        {% endif %}
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Login Form -->
+        <form method="post" id="loginForm">
+            {% csrf_token %}
+            
+            <!-- Username/Email -->
+            <div class="form-group">
+                <label for="username" class="form-label">Username or Email</label>
+                <input type="text" 
+                       name="username" 
+                       id="username" 
+                       class="form-control {% if form.errors %}error{% endif %}" 
+                       placeholder="Enter your username or email"
+                       value="{{ form.username.value|default:'' }}"
+                       required
+                       autofocus>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-with-icon">
+                    <input type="password" 
+                           name="password" 
+                           id="password" 
+                           class="form-control {% if form.errors %}error{% endif %}" 
+                           placeholder="Enter your password"
+                           required>
+                    <span class="input-icon" onclick="togglePassword()">👁️</span>
+                </div>
+            </div>
+
+            <!-- Form Options -->
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember_me" id="remember_me">
+                    Remember me
+                </label>
+                <a href="#" class="forgot-password">Forgot password?</a>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit" id="submitBtn">
+                🔐 Sign In
+            </button>
+        </form>
+
+        <!-- Demo Accounts (for testing) -->
+        <div class="demo-accounts">
+            <div class="demo-title">
+                🚀 Demo Accounts (For Testing)
+            </div>
+            
+            <div class="demo-account" onclick="fillDemoCredentials('citizen')">
+                <div class="demo-role">👤 Citizen Account</div>
+                <div class="demo-credentials">Username: demo_citizen | Password: demo123</div>
+            </div>
+            
+            <div class="demo-account" onclick="fillDemoCredentials('authority')">
+                <div class="demo-role">🏢 Authority Account</div>
+                <div class="demo-credentials">Username: demo_authority | Password: demo123</div>
+            </div>
+            
+            <div class="demo-account" onclick="fillDemoCredentials('admin')">
+                <div class="demo-role">⚙️ Admin Account</div>
+                <div class="demo-credentials">Username: demo_admin | Password: demo123</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{% url 'register' %}" class="auth-link">Sign up here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    function togglePassword() {
+        const passwordField = document.getElementById('password');
+        const icon = document.querySelector('.input-icon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            icon.textContent = '🔒';
+        } else {
+            passwordField.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
+    // Demo account filler
+    function fillDemoCredentials(role) {
+        const credentials = {
+            'citizen': { username: 'demo_citizen', password: 'demo123' },
+            'authority': { username: 'demo_authority', password: 'demo123' },
+            'admin': { username: 'demo_admin', password: 'demo123' }
+        };
+        
+        const cred = credentials[role];
+        document.getElementById('username').value = cred.username;
+        document.getElementById('password').value = cred.password;
+        
+        // Show success message
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = `✅ ${role.charAt(0).toUpperCase() + role.slice(1)} credentials filled!`;
+        submitBtn.style.background = 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)';
+        
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+        }, 2000);
+    }
+
+    // Form submission handler
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '🔄 Signing in...';
+        submitBtn.disabled = true;
+        
+        // Form will submit normally
+    });
+
+    // Enter key to submit
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('loginForm').requestSubmit();
+        }
+    });
+
+    // Auto-focus on username field
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('username').focus();
+        
+        // Check if there are errors and scroll to them
+        if (document.querySelector('.error')) {
+            document.querySelector('.error').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
+    });
+
+    // Remember me functionality (basic)
+    document.addEventListener('DOMContentLoaded', function() {
+        const rememberedUsername = localStorage.getItem('rememberedUsername');
+        if (rememberedUsername) {
+            document.getElementById('username').value = rememberedUsername;
+            document.getElementById('remember_me').checked = true;
+        }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        if (document.getElementById('remember_me').checked) {
+            localStorage.setItem('rememberedUsername', document.getElementById('username').value);
+        } else {
+            localStorage.removeItem('rememberedUsername');
+        }
+    });
+</script>
+{% endblock %}

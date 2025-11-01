@@ -1,0 +1,163 @@
+<!-- templates/complaints/admin_location_management.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Location Management - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .location-management {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .map-container {
+        height: 500px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+    }
+
+    .location-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .location-item {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .location-item:hover {
+        border-color: #3498db;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+    }
+
+    .location-item.active {
+        border-color: #3498db;
+        background: #e3f2fd;
+    }
+
+    .complaint-count {
+        background: #3498db;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>📍 Location Management</h1>
+        <p>Manage complaint locations and geographic data</p>
+    </div>
+
+    <div class="location-management">
+        <!-- Map Section -->
+        <div>
+            <h3>🗺️ Complaints Map</h3>
+            <div id="locationMap" class="map-container"></div>
+        </div>
+
+        <!-- Location List -->
+        <div>
+            <h3>📋 Complaint Locations</h3>
+            <div class="location-list">
+                {% for location in locations %}
+                <div class="location-item" onclick="focusOnLocation({{ location.latitude }}, {{ location.longitude }}, '{{ location.area }}')">
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        {{ location.area }}
+                        <span class="complaint-count">{{ location.complaint_count }}</span>
+                    </div>
+                    <div style="color: #666; font-size: 0.875rem;">
+                        📍 {{ location.latitude|floatformat:4 }}, {{ location.longitude|floatformat:4 }}
+                    </div>
+                    <div style="color: #666; font-size: 0.875rem;">
+                        Latest: {{ location.latest_complaint|default:"No complaints" }}
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <div>📍</div>
+                    <p>No location data available</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Statistics -->
+    <div style="margin-top: 2rem;">
+        <h3>📊 Location Statistics</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="stat-card">
+                <span class="stat-number">{{ stats.locations_with_data }}</span>
+                <span class="stat-label">Locations with Data</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ stats.most_active_area }}</span>
+                <span class="stat-label">Most Active Area</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ stats.avg_complaints_per_location }}</span>
+                <span class="stat-label">Avg Complaints per Location</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    let map;
+
+    function initMap() {
+        map = L.map('locationMap');
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add complaint markers
+        {% for location in locations %}
+        {% if location.latitude and location.longitude %}
+        L.marker([{{ location.latitude }}, {{ location.longitude }}])
+            .addTo(map)
+            .bindPopup(`<strong>{{ location.area }}</strong><br>{{ location.complaint_count }} complaints`);
+        {% endif %}
+        {% endfor %}
+        
+        // Set initial view
+        map.setView([12.9716, 77.5946], 12);
+    }
+
+    function focusOnLocation(lat, lng, area) {
+        map.setView([lat, lng], 15);
+        
+        // You could also highlight the specific marker
+        L.popup()
+            .setLatLng([lat, lng])
+            .setContent(`<strong>${area}</strong>`)
+            .openOn(map);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+    });
+</script>
+{% endblock %}

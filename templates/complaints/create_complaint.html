@@ -1,0 +1,610 @@
+<!-- templates/complaints/create_complaint.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report New Issue - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .form-title {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3498db;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .camera-section {
+        border: 2px dashed #3498db;
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        background: #f8f9fa;
+    }
+    
+    .camera-preview {
+        width: 100%;
+        max-width: 400px;
+        height: 300px;
+        background: #000;
+        margin: 0 auto 1rem;
+        border-radius: 4px;
+        display: none;
+    }
+    
+    .captured-image {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 4px;
+        display: none;
+        margin: 0 auto;
+    }
+    
+    .camera-controls {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .map-container {
+        height: 300px;
+        width: 100%;
+        border-radius: 8px;
+        margin: 1rem 0;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .location-info {
+        background: #e8f4fd;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+        border-left: 4px solid #3498db;
+    }
+    
+    .btn-camera {
+        background: #3498db;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-camera:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+    
+    .btn-capture {
+        background: #27ae60;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-capture:hover {
+        background: #219a52;
+    }
+    
+    .btn-location {
+        background: #9b59b6;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-location:hover {
+        background: #8e44ad;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+    
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+    }
+    
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #e74c3c;
+    }
+    
+    .status-dot.active {
+        background: #27ae60;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .authority-info {
+        background: #d4edda;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+        border-left: 4px solid #27ae60;
+        display: none;
+    }
+    
+    .two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .two-column {
+            grid-template-columns: 1fr;
+        }
+        
+        .camera-controls {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-section">
+        <h1 class="form-title">📱 Live Issue Reporting</h1>
+        <p style="color: #666; margin-bottom: 2rem;">
+            Report cleanliness issues in real-time using your camera and live location. This helps authorities respond faster and more accurately.
+        </p>
+
+        <form method="post" enctype="multipart/form-data" id="complaintForm">
+            {% csrf_token %}
+            
+            <!-- Camera Section -->
+            <div class="form-group">
+                <label class="form-label">📸 Capture Live Photo</label>
+                <div class="camera-section">
+                    <div class="status-indicator">
+                        <div class="status-dot" id="cameraStatus"></div>
+                        <span id="cameraStatusText">Camera not accessed</span>
+                    </div>
+                    
+                    <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
+                    <img id="capturedImage" class="captured-image" alt="Captured photo">
+                    
+                    <div class="camera-controls">
+                        <button type="button" class="btn-camera" id="startCamera">
+                            📷 Start Camera
+                        </button>
+                        <button type="button" class="btn-capture" id="capturePhoto" style="display: none;">
+                            📸 Capture Photo
+                        </button>
+                        <button type="button" class="btn-camera" id="retakePhoto" style="display: none;">
+            🔄 Retake Photo
+                        </button>
+                    </div>
+                    
+                    <input type="hidden" name="photo_data" id="photoData">
+                </div>
+            </div>
+
+            <!-- Location Section -->
+            <div class="form-group">
+                <label class="form-label">📍 Live Location & Map</label>
+                <div class="location-info">
+                    <div class="status-indicator">
+                        <div class="status-dot" id="locationStatus"></div>
+                        <span id="locationStatusText">Location not accessed</span>
+                    </div>
+                    
+                    <button type="button" class="btn-location" id="getLocation">
+                        🗺️ Get Current Location
+                    </button>
+                    
+                    <div id="locationDetails" style="margin-top: 1rem; display: none;">
+                        <strong>Detected Location:</strong>
+                        <div id="address"></div>
+                        <div>Latitude: <span id="latitudeDisplay"></span></div>
+                        <div>Longitude: <span id="longitudeDisplay"></span></div>
+                    </div>
+                </div>
+                
+                <div id="map" class="map-container"></div>
+                <div id="authorityInfo" class="authority-info">
+                    <strong>🎯 Assigned Authority:</strong>
+                    <div id="assignedAuthority">Finding nearest municipal authority...</div>
+                    <div id="authorityDistance"></div>
+                </div>
+                
+                <input type="hidden" name="latitude" id="latitude" value="">
+                <input type="hidden" name="longitude" id="longitude" value="">
+                <input type="hidden" name="address" id="addressInput" value="">
+            </div>
+
+            <!-- Complaint Details -->
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}" class="form-label required">Issue Title</label>
+                    <input type="text" 
+                           name="{{ form.title.name }}" 
+                           id="{{ form.title.id_for_label }}" 
+                           class="form-control" 
+                           placeholder="e.g., Overflowing garbage bin"
+                           value="{{ form.title.value|default:'' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}" class="form-label required">Category</label>
+                    <select name="{{ form.category.name }}" 
+                            id="{{ form.category.id_for_label }}" 
+                            class="form-control" 
+                            required>
+                        <option value="">Select category</option>
+                        {% for category in form.category.field.queryset %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="{{ form.urgency.id_for_label }}" class="form-label required">Urgency</label>
+                    <select name="{{ form.urgency.name }}" 
+                            id="{{ form.urgency.id_for_label }}" 
+                            class="form-control" 
+                            required>
+                        <option value="">Select urgency</option>
+                        {% for value, label in form.urgency.field.choices %}
+                            {% if value %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="location_input" class="form-label required">Location Address</label>
+                    <input type="text" 
+                           name="location" 
+                           id="location_input" 
+                           class="form-control" 
+                           placeholder="Address will be auto-filled from GPS"
+                           value="{{ form.location.value|default:'' }}"
+                           required readonly>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label required">Description</label>
+                <textarea name="{{ form.description.name }}" 
+                          id="{{ form.description.id_for_label }}" 
+                          class="form-control" 
+                          rows="4" 
+                          placeholder="Describe the issue in detail..."
+                          required>{{ form.description.value|default:'' }}</textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    🚨 Submit Live Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet CSS & JS for Maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Global variables
+    let map;
+    let marker;
+    let userLocation = null;
+    let stream = null;
+    
+    // Initialize map
+    function initMap() {
+        map = L.map('map').setView([0, 0], 2);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    }
+    
+    // Camera functionality
+    document.getElementById('startCamera').addEventListener('click', async function() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
+            
+            const video = document.getElementById('cameraPreview');
+            video.srcObject = stream;
+            video.style.display = 'block';
+            
+            document.getElementById('capturePhoto').style.display = 'inline-block';
+            document.getElementById('startCamera').style.display = 'none';
+            
+            updateStatus('cameraStatus', 'Camera active', true);
+        } catch (error) {
+            console.error('Camera error:', error);
+            alert('Unable to access camera. Please check permissions.');
+        }
+    });
+    
+    // Capture photo
+    document.getElementById('capturePhoto').addEventListener('click', function() {
+        const video = document.getElementById('cameraPreview');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('capturedImage').src = imageData;
+        document.getElementById('photoData').value = imageData;
+        
+        document.getElementById('capturedImage').style.display = 'block';
+        document.getElementById('cameraPreview').style.display = 'none';
+        document.getElementById('capturePhoto').style.display = 'none';
+        document.getElementById('retakePhoto').style.display = 'inline-block';
+        
+        // Stop camera stream
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+    
+    // Retake photo
+    document.getElementById('retakePhoto').addEventListener('click', function() {
+        document.getElementById('capturedImage').style.display = 'none';
+        document.getElementById('cameraPreview').style.display = 'block';
+        document.getElementById('capturePhoto').style.display = 'inline-block';
+        document.getElementById('retakePhoto').style.display = 'none';
+        document.getElementById('photoData').value = '';
+        
+        // Restart camera
+        document.getElementById('startCamera').click();
+    });
+    
+    // Get location
+    document.getElementById('getLocation').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            updateStatus('locationStatus', 'Getting location...', false);
+            
+            navigator.geolocation.getCurrentPosition(
+                async function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    userLocation = { lat, lng };
+                    
+                    // Update map
+                    map.setView([lat, lng], 16);
+                    if (marker) {
+                        map.removeLayer(marker);
+                    }
+                    marker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Your current location')
+                        .openPopup();
+                    
+                    // Add circle around location
+                    L.circle([lat, lng], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.1,
+                        radius: 100
+                    }).addTo(map);
+                    
+                    // Get address from coordinates
+                    const address = await getAddressFromCoords(lat, lng);
+                    
+                    // Update form fields
+                    document.getElementById('latitude').value = lat;
+                    document.getElementById('longitude').value = lng;
+                    document.getElementById('latitudeDisplay').textContent = lat.toFixed(6);
+                    document.getElementById('longitudeDisplay').textContent = lng.toFixed(6);
+                    document.getElementById('address').textContent = address;
+                    document.getElementById('location_input').value = address;
+                    document.getElementById('addressInput').value = address;
+                    
+                    // Show location details
+                    document.getElementById('locationDetails').style.display = 'block';
+                    updateStatus('locationStatus', 'Location detected', true);
+                    
+                    // Find nearest authority
+                    await findNearestAuthority(lat, lng);
+                    
+                },
+                function(error) {
+                    console.error('Location error:', error);
+                    updateStatus('locationStatus', 'Location access denied', false);
+                    alert('Unable to get location. Please enable location services.');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
+    
+    // Get address from coordinates using OpenStreetMap Nominatim
+    async function getAddressFromCoords(lat, lng) {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            );
+            const data = await response.json();
+            
+            if (data && data.address) {
+                const address = data.address;
+                let formattedAddress = '';
+                
+                if (address.road) formattedAddress += address.road + ', ';
+                if (address.suburb) formattedAddress += address.suburb + ', ';
+                if (address.city || address.town || address.village) {
+                    formattedAddress += (address.city || address.town || address.village) + ', ';
+                }
+                if (address.state) formattedAddress += address.state + ', ';
+                if (address.country) formattedAddress += address.country;
+                
+                return formattedAddress || 'Address not available';
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error);
+        }
+        
+        return `Near coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+    
+    // Find nearest authority (mock function - replace with actual API call)
+    async function findNearestAuthority(lat, lng) {
+        document.getElementById('authorityInfo').style.display = 'block';
+        
+        // Simulate API call delay
+        setTimeout(() => {
+            // Mock authorities data (in real app, this would come from your database)
+            const mockAuthorities = [
+                { name: "North Zone Municipal Office", distance: "0.8 km", phone: "+91-80-12345678" },
+                { name: "Central Waste Management", distance: "1.2 km", phone: "+91-80-87654321" },
+                { name: "City Sanitation Dept", distance: "2.1 km", phone: "+91-80-11223344" }
+            ];
+            
+            // Find closest authority (simplified)
+            const closest = mockAuthorities[0];
+            
+            document.getElementById('assignedAuthority').innerHTML = `
+                <strong>${closest.name}</strong><br>
+                📞 ${closest.phone}
+            `;
+            document.getElementById('authorityDistance').textContent = `Distance: ${closest.distance}`;
+            
+        }, 1500);
+    }
+    
+    // Update status indicators
+    function updateStatus(elementId, text, isActive) {
+        const statusDot = document.getElementById(elementId);
+        const statusText = document.getElementById(elementId + 'Text');
+        
+        statusText.textContent = text;
+        if (isActive) {
+            statusDot.classList.add('active');
+        } else {
+            statusDot.classList.remove('active');
+        }
+    }
+    
+    // Form validation
+    document.getElementById('complaintForm').addEventListener('submit', function(e) {
+        const hasLocation = document.getElementById('latitude').value !== '';
+        const hasPhoto = document.getElementById('photoData').value !== '';
+        
+        if (!hasLocation) {
+            e.preventDefault();
+            alert('Please enable location access to submit a live report.');
+            return;
+        }
+        
+        if (!hasPhoto) {
+            const proceed = confirm('No photo captured. Are you sure you want to submit without a photo?');
+            if (!proceed) {
+                e.preventDefault();
+                return;
+            }
+        }
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = '🔄 Submitting...';
+        submitBtn.disabled = true;
+    });
+    
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+        updateStatus('cameraStatus', 'Camera not accessed', false);
+        updateStatus('locationStatus', 'Location not accessed', false);
+    });
+</script>
+{% endblock %}

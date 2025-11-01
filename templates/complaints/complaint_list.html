@@ -1,0 +1,758 @@
+<!-- templates/complaints/complaint_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complaints List - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-left: 4px solid #3498db;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .complaints-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .table-header {
+        background: #34495e;
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: left;
+        font-weight: bold;
+        color: #2c3e50;
+        border-bottom: 2px solid #e9ecef;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    th:hover {
+        background: #e9ecef;
+    }
+
+    th i {
+        margin-left: 0.5rem;
+        opacity: 0.5;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: top;
+    }
+
+    tr:hover {
+        background: #f8f9fa;
+    }
+
+    .complaint-title {
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    .complaint-meta {
+        font-size: 0.875rem;
+        color: #666;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-approved { background: #d1ecf1; color: #0c5460; }
+    .status-assigned { background: #d1ecf1; color: #0c5460; }
+    .status-in_progress { background: #ffeaa7; color: #856404; }
+    .status-resolved { background: #d4edda; color: #155724; }
+    .status-rejected { background: #f8d7da; color: #721c24; }
+
+    .urgency-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .urgency-low { background: #d4edda; color: #155724; }
+    .urgency-medium { background: #fff3cd; color: #856404; }
+    .urgency-high { background: #f8d7da; color: #721c24; }
+    .urgency-critical { background: #721c24; color: white; }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-view { background: #3498db; color: white; }
+    .btn-view:hover { background: #2980b9; }
+
+    .btn-update { background: #27ae60; color: white; }
+    .btn-update:hover { background: #219a52; }
+
+    .btn-assign { background: #9b59b6; color: white; }
+    .btn-assign:hover { background: #8e44ad; }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1.5rem;
+        gap: 0.5rem;
+    }
+
+    .page-link {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #3498db;
+    }
+
+    .page-link:hover {
+        background: #f8f9fa;
+    }
+
+    .page-link.active {
+        background: #3498db;
+        color: white;
+        border-color: #3498db;
+    }
+
+    .page-link.disabled {
+        color: #6c757d;
+        pointer-events: none;
+        background: #f8f9fa;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .photo-thumbnail {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        object-fit: cover;
+        border: 2px solid #e9ecef;
+    }
+
+    .photo-thumbnail:hover {
+        border-color: #3498db;
+        transform: scale(1.1);
+        transition: all 0.3s;
+    }
+
+    .map-preview {
+        width: 100px;
+        height: 60px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        th, td {
+            padding: 0.5rem;
+        }
+
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+    }
+
+    .sortable:hover {
+        background: #e9ecef;
+    }
+
+    .filter-active {
+        background: #3498db !important;
+        color: white !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1>Complaints Management</h1>
+            <p>View and manage all cleanliness complaints reported by citizens</p>
+        </div>
+        <div>
+            {% if user.role == 'citizen' %}
+            <a href="{% url 'create_complaint' %}" class="btn btn-success">+ Report New Issue</a>
+            {% endif %}
+            {% if user.role == 'admin' %}
+            <a href="{% url 'generate_reports' %}" class="btn">📊 View Reports</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_complaints }}</span>
+            <span class="stat-label">Total Complaints</span>
+        </div>
+        <div class="stat-card" style="border-left-color: #27ae60;">
+            <span class="stat-number">{{ resolved_complaints }}</span>
+            <span class="stat-label">Resolved</span>
+        </div>
+        <div class="stat-card" style="border-left-color: #e74c3c;">
+            <span class="stat-number">{{ pending_complaints }}</span>
+            <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-card" style="border-left-color: #f39c12;">
+            <span class="stat-number">{{ in_progress_complaints }}</span>
+            <span class="stat-label">In Progress</span>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <h3>🔍 Filter & Search Complaints</h3>
+        <form method="get" id="filterForm">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select name="category" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if current_category == category.id|stringformat:"i" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Urgency</label>
+                    <select name="urgency" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Urgency Levels</option>
+                        {% for value, label in urgency_choices %}
+                        <option value="{{ value }}" {% if current_urgency == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select name="date_range" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Time</option>
+                        <option value="today" {% if current_date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if current_date_range == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if current_date_range == 'month' %}selected{% endif %}>This Month</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: end;">
+                <div class="filter-group" style="flex: 1;">
+                    <label class="filter-label">Search</label>
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="Search by title, description, or location..."
+                           value="{{ search_query }}">
+                </div>
+                <div>
+                    <button type="submit" class="btn">🔍 Search</button>
+                    <a href="{% url 'complaint_list' %}" class="btn" style="background: #6c757d;">🔄 Clear</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Active Filters -->
+        {% if active_filters %}
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <strong>Active Filters:</strong>
+            {% for filter in active_filters %}
+            <span class="status-badge" style="background: #3498db; color: white; margin-left: 0.5rem;">
+                {{ filter }}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Complaints Table -->
+    <div class="complaints-table">
+        <div class="table-header">
+            <div>
+                <strong>{{ complaints|length }} complaint{{ complaints|length|pluralize }} found</strong>
+            </div>
+            <div class="export-buttons">
+                <button class="btn-sm" onclick="exportToCSV()">📄 Export CSV</button>
+                <button class="btn-sm" onclick="printTable()">🖨️ Print</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('title')" class="sortable">
+                            Complaint <i>↕</i>
+                        </th>
+                        <th onclick="sortTable('category')" class="sortable">
+                            Category <i>↕</i>
+                        </th>
+                        <th onclick="sortTable('status')" class="sortable">
+                            Status <i>↕</i>
+                        </th>
+                        <th onclick="sortTable('urgency')" class="sortable">
+                            Urgency <i>↕</i>
+                        </th>
+                        {% if user.role != 'citizen' %}
+                        <th onclick="sortTable('citizen')" class="sortable">
+                            Reported By <i>↕</i>
+                        </th>
+                        {% endif %}
+                        <th onclick="sortTable('created_at')" class="sortable">
+                            Date <i>↕</i>
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td>
+                            <div class="complaint-title">
+                                {% if complaint.photo %}
+                                <img src="{{ complaint.photo.url }}" 
+                                     alt="Complaint photo" 
+                                     class="photo-thumbnail"
+                                     onclick="showImage('{{ complaint.photo.url }}')">
+                                {% else %}
+                                <div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999;">
+                                    📷
+                                </div>
+                                {% endif %}
+                                {{ complaint.title }}
+                            </div>
+                            <div class="complaint-meta">
+                                {{ complaint.location|truncatewords:5 }}
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ complaint.category.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ complaint.status }}">
+                                {{ complaint.get_status_display }}
+                            </span>
+                            {% if complaint.assigned_authority %}
+                            <div class="complaint-meta">
+                                Assigned to: {{ complaint.assigned_authority.username }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="urgency-badge urgency-{{ complaint.urgency }}">
+                                {{ complaint.get_urgency_display }}
+                            </span>
+                        </td>
+                        {% if user.role != 'citizen' %}
+                        <td>
+                            <strong>{{ complaint.citizen.username }}</strong>
+                            <div class="complaint-meta">
+                                {{ complaint.citizen.email }}
+                            </div>
+                        </td>
+                        {% endif %}
+                        <td>
+                            <strong>{{ complaint.created_at|date:"M d, Y" }}</strong>
+                            <div class="complaint-meta">
+                                {{ complaint.created_at|date:"H:i" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'complaint_detail' complaint.id %}" 
+                                   class="btn-sm btn-view" title="View Details">
+                                    👁️ View
+                                </a>
+                                
+                                {% if user.role == 'authority' and complaint.assigned_authority == user %}
+                                <a href="{% url 'update_complaint_status' complaint.id %}" 
+                                   class="btn-sm btn-update" title="Update Status">
+                                    ✏️ Update
+                                </a>
+                                {% endif %}
+                                
+                                {% if user.role == 'admin' %}
+                                <a href="{% url 'update_complaint_status' complaint.id %}" 
+                                   class="btn-sm btn-update" title="Manage Complaint">
+                                    ⚙️ Manage
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if user.role != 'citizen' %}7{% else %}6{% endif %}">
+                            <div class="empty-state">
+                                <div>📝</div>
+                                <h3>No complaints found</h3>
+                                <p>
+                                    {% if active_filters %}
+                                    Try adjusting your filters to see more results.
+                                    {% else %}
+                                    {% if user.role == 'citizen' %}
+                                    You haven't reported any complaints yet.
+                                    {% else %}
+                                    No complaints have been reported yet.
+                                    {% endif %}
+                                    {% endif %}
+                                </p>
+                                {% if user.role == 'citizen' and not active_filters %}
+                                <a href="{% url 'create_complaint' %}" class="btn btn-success">
+                                    Report Your First Issue
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if complaints.has_other_pages %}
+        <div class="pagination">
+            {% if complaints.has_previous %}
+            <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="page-link">« First</a>
+            <a href="?page={{ complaints.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="page-link">‹ Previous</a>
+            {% else %}
+            <span class="page-link disabled">« First</span>
+            <span class="page-link disabled">‹ Previous</span>
+            {% endif %}
+
+            {% for i in complaints.paginator.page_range %}
+                {% if complaints.number == i %}
+                <span class="page-link active">{{ i }}</span>
+                {% elif i > complaints.number|add:'-3' and i < complaints.number|add:'3' %}
+                <a href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">{{ i }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if complaints.has_next %}
+            <a href="?page={{ complaints.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="page-link">Next ›</a>
+            <a href="?page={{ complaints.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="page-link">Last »</a>
+            {% else %}
+            <span class="page-link disabled">Next ›</span>
+            <span class="page-link disabled">Last »</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 1rem; border-radius: 8px; max-width: 90%; max-height: 90%;">
+        <img id="modalImage" src="" alt="Complaint photo" style="max-width: 100%; max-height: 80vh;">
+        <div style="text-align: center; margin-top: 1rem;">
+            <button onclick="closeImage()" class="btn">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sort table functionality
+    let sortField = '{{ sort_field|default:"created_at" }}';
+    let sortDirection = '{{ sort_direction|default:"desc" }}';
+
+    function sortTable(field) {
+        if (sortField === field) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortField = field;
+            sortDirection = 'asc';
+        }
+        
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', sortField);
+        url.searchParams.set('order', sortDirection);
+        window.location.href = url.toString();
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+        const headers = [
+            'Title', 'Category', 'Status', 'Urgency', 'Location', 
+            'Reported By', 'Created Date', 'Description'
+        ];
+        
+        let csvContent = headers.join(',') + '\n';
+        
+        {% for complaint in complaints %}
+        csvContent += [
+            `"{{ complaint.title|escapejs }}"`,
+            `"{{ complaint.category.name|escapejs }}"`,
+            `"{{ complaint.get_status_display|escapejs }}"`,
+            `"{{ complaint.get_urgency_display|escapejs }}"`,
+            `"{{ complaint.location|escapejs }}"`,
+            `"{{ complaint.citizen.username|escapejs }}"`,
+            `"{{ complaint.created_at|date:"Y-m-d H:i" }}"`,
+            `"{{ complaint.description|escapejs|truncatewords:20 }}"`
+        ].join(',') + '\n';
+        {% endfor %}
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'complaints_{{ current_date|date:"Y-m-d" }}.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // Print table
+    function printTable() {
+        const printContent = `
+            <html>
+            <head>
+                <title>Complaints Report - {{ current_date|date:"Y-m-d" }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    .status-badge { padding: 2px 6px; border-radius: 10px; font-size: 0.8em; }
+                </style>
+            </head>
+            <body>
+                <h1>Complaints Report - {{ current_date|date:"F j, Y" }}</h1>
+                ${document.querySelector('.complaints-table').innerHTML}
+            </body>
+            </html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    // Image modal functions
+    function showImage(imageUrl) {
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function closeImage() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // Close modal on outside click
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImage();
+        }
+    });
+
+    // Auto-submit form on filter change (for better UX)
+    document.querySelectorAll('select[onchange]').forEach(select => {
+        select.addEventListener('change', function() {
+            // Show loading state
+            const submitBtn = document.querySelector('#filterForm button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '🔄 Applying...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 100);
+        });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 'f':
+                    e.preventDefault();
+                    document.querySelector('input[name="search"]').focus();
+                    break;
+                case 'e':
+                    e.preventDefault();
+                    exportToCSV();
+                    break;
+                case 'p':
+                    e.preventDefault();
+                    printTable();
+                    break;
+            }
+        }
+    });
+
+    // Initialize table sorting indicators
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentSort = '{{ sort_field }}';
+        const currentOrder = '{{ sort_direction }}';
+        
+        if (currentSort) {
+            const headers = document.querySelectorAll('th.sortable');
+            headers.forEach(header => {
+                if (header.textContent.includes(currentSort.replace('_', ' '))) {
+                    const icon = header.querySelector('i');
+                    icon.textContent = currentOrder === 'asc' ? ' ↑' : ' ↓';
+                    icon.style.opacity = '1';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

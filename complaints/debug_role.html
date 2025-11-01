@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Role</title>
+</head>
+<body>
+    <h1>User Debug Information</h1>
+    <p>Username: {{ username }}</p>
+    <p>Role: {{ role }}</p>
+    <p>Is Staff: {{ is_staff }}</p>
+    <p>Is Superuser: {{ is_superuser }}</p>
+    <h2>All User Attributes:</h2>
+    <ul>
+    {% for attr in all_attributes %}
+        <li>{{ attr }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

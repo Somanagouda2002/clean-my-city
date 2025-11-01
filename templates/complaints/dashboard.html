@@ -1,0 +1,206 @@
+<!-- templates/complaints/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Clean My City{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Welcome, {{ user.username }}</h1>
+    <p>Role: <strong>{{ user.get_role_display }}</strong></p>
+    <p>Last login: {{ user.last_login|date:"M d, Y H:i" }}</p>
+</div>
+
+{% if user.role == 'citizen' %}
+<!-- Citizen Dashboard -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>Your Recent Complaints</h2>
+        <a href="{% url 'create_complaint' %}" class="btn btn-success">Report New Issue</a>
+    </div>
+    
+    {% if complaints %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Title</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Category</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Status</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Date</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ complaint.title }}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ complaint.category.name }}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">
+                        <span class="status-badge status-{{ complaint.status }}">
+                            {{ complaint.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ complaint.created_at|date:"M d, Y" }}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">
+                        <a href="{% url 'complaint_detail' complaint.id %}" class="btn">View</a>
+                        {% if complaint.status == 'resolved' and not complaint.feedback %}
+                        <a href="{% url 'submit_feedback' complaint.id %}" class="btn btn-success">Feedback</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>You haven't submitted any complaints yet.</p>
+    {% endif %}
+</div>
+
+{% if recent_updates %}
+<div class="card">
+    <h2>Recent Updates</h2>
+    {% for update in recent_updates %}
+    <div style="padding: 1rem; border-bottom: 1px solid #eee;">
+        <strong>{{ update.complaint.title }}</strong>
+        <p>{{ update.notes|default:"No notes provided" }}</p>
+        <small>By {{ update.authority.username }} on {{ update.created_at|date:"M d, Y H:i" }}</small>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% elif user.role == 'authority' %}
+<!-- Authority Dashboard -->
+<div class="card">
+    <h2>Your Assigned Complaints</h2>
+    
+    {% if high_priority %}
+    <div style="background: #fff3cd; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+        <h3 style="color: #856404;">⚠️ High Priority Complaints</h3>
+        <ul>
+            {% for complaint in high_priority %}
+            <li>
+                <a href="{% url 'complaint_detail' complaint.id %}">{{ complaint.title }}</a>
+                - {{ complaint.get_urgency_display }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {% if assigned_complaints %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Title</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Category</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Urgency</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Status</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in assigned_complaints %}
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ complaint.title }}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ complaint.category.name }}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">
+                        <span style="color: {% if complaint.urgency == 'critical' %}#e74c3c{% elif complaint.urgency == 'high' %}#e67e22{% else %}#27ae60{% endif %};">
+                            {{ complaint.get_urgency_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">
+                        <span class="status-badge status-{{ complaint.status }}">
+                            {{ complaint.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">
+                        <a href="{% url 'complaint_detail' complaint.id %}" class="btn">View</a>
+                        <a href="{% url 'update_complaint_status' complaint.id %}" class="btn btn-success">Update</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No complaints assigned to you at the moment.</p>
+    {% endif %}
+</div>
+
+{% elif user.role == 'admin' %}
+<!-- Admin Dashboard -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <h3>Total Complaints</h3>
+        <p style="font-size: 2rem; font-weight: bold; color: #3498db;">{{ total_complaints }}</p>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3>Resolved</h3>
+        <p style="font-size: 2rem; font-weight: bold; color: #27ae60;">{{ resolved_complaints }}</p>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3>Pending Approval</h3>
+        <p style="font-size: 2rem; font-weight: bold; color: #e74c3c;">{{ pending_approval }}</p>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3>Last 7 Days</h3>
+        <p style="font-size: 2rem; font-weight: bold; color: #9b59b6;">{{ recent_complaints }}</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div class="card">
+        <h2>Complaints by Status</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            {% for stat in status_stats %}
+            <tr>
+                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                    <span class="status-badge status-{{ stat.status }}">
+                        {{ stat.status|title }}
+                    </span>
+                </td>
+                <td style="padding: 0.5rem; border-bottom: 1px solid #eee; text-align: right;">
+                    {{ stat.count }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Recent Activity</h2>
+        {% if recent_activity %}
+            {% for activity in recent_activity %}
+            <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+                <strong>{{ activity.complaint.title }}</strong>
+                <br>
+                <small>
+                    {{ activity.authority.username }} updated to 
+                    <span class="status-badge status-{{ activity.status }}">
+                        {{ activity.status|title }}
+                    </span>
+                    <br>
+                    {{ activity.created_at|timesince }} ago
+                </small>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No recent activity.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Quick Actions</h2>
+        <div>
+            <a href="{% url 'complaint_list' %}" class="btn">View All Complaints</a>
+            <a href="{% url 'generate_reports' %}" class="btn btn-success">Generate Reports</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

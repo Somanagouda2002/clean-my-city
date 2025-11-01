@@ -1,0 +1,419 @@
+<!-- templates/registration/logout.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logout - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logout-container {
+        max-width: 500px;
+        margin: 4rem auto;
+        padding: 0 1rem;
+    }
+
+    .logout-card {
+        background: white;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .logout-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .logout-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.8;
+    }
+
+    .logout-title {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .logout-message {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+        font-size: 1.1rem;
+    }
+
+    .user-info {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+
+    .user-details {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .user-text strong {
+        display: block;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-text span {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .logout-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-logout {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .btn-logout:hover {
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-cancel {
+        background: #95a5a6;
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        text-decoration: none;
+        flex: 1;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-cancel:hover {
+        background: #7f8c8d;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);
+    }
+
+    .logout-options {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .options-title {
+        color: #666;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .option-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .option-btn {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .option-btn:hover {
+        background: #e9ecef;
+        border-color: #3498db;
+        color: #3498db;
+        transform: translateY(-1px);
+    }
+
+    .security-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+        text-align: left;
+    }
+
+    .security-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .security-text {
+        color: #856404;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .session-info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .session-title {
+        color: #0c5460;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .session-details {
+        color: #0c5460;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 480px) {
+        .logout-container {
+            margin: 2rem auto;
+        }
+
+        .logout-card {
+            padding: 2rem 1rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+
+        .btn-logout, .btn-cancel {
+            width: 100%;
+        }
+
+        .logout-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logout-container">
+    <div class="logout-card">
+        <!-- Main Icon -->
+        <div class="logout-icon">👋</div>
+        
+        <!-- Title -->
+        <h1 class="logout-title">Ready to Leave?</h1>
+        
+        <!-- Message -->
+        <p class="logout-message">
+            You're about to log out of your Clean My City account. 
+            {% if user_stats.total_complaints > 0 %}
+                You've been active with {{ user_stats.total_complaints }} complaint{{ user_stats.total_complaints|pluralize }}.
+            {% endif %}
+            Are you sure you want to continue?
+        </p>
+
+        <!-- User Information -->
+        <div class="user-info">
+            <div class="user-details">
+                <div class="user-avatar">
+                    {{ user.username|first|upper }}
+                </div>
+                <div class="user-text">
+                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                    <span>{{ user.email }}</span>
+                </div>
+            </div>
+            
+            <!-- User Statistics -->
+            <div class="logout-stats">
+                <div class="stat">
+                    <span class="stat-number">{{ user_stats.total_complaints }}</span>
+                    <span class="stat-label">Total Complaints</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ user_stats.resolved_complaints }}</span>
+                    <span class="stat-label">Resolved</span>
+                </div>
+                {% if user.role == 'authority' %}
+                <div class="stat">
+                    <span class="stat-number">{{ user_stats.assigned_complaints }}</span>
+                    <span class="stat-label">Assigned</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ user_stats.completion_rate }}%</span>
+                    <span class="stat-label">Completion</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Session Information -->
+        <div class="session-info">
+            <div class="session-title">
+                🔒 Session Information
+            </div>
+            <div class="session-details">
+                • Logged in since: {{ user.last_login|date:"M d, Y H:i"|default:"Recently" }}<br>
+                • Account type: {{ user.get_role_display }}<br>
+                • Session duration: {{ session_duration }}
+            </div>
+        </div>
+
+        <!-- Main Action Buttons -->
+        <div class="button-group">
+            <form method="post" action="{% url 'logout' %}" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">
+                    🚪 Yes, Log Out
+                </button>
+            </form>
+            <a href="{% url 'dashboard' %}" class="btn-cancel">
+                ↩️ Cancel
+            </a>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="security-notice">
+            <div class="security-title">
+                ⚠️ Security Notice
+            </div>
+            <div class="security-text">
+                For your security, we recommend logging out when you're done using the application, 
+                especially on shared or public computers.
+            </div>
+        </div>
+
+        <!-- Additional Options -->
+        <div class="logout-options">
+            <div class="options-title">Other Options</div>
+            <div class="option-buttons">
+                <a href="{% url 'profile' %}" class="option-btn">
+                    👤 View Profile
+                </a>
+                <a href="{% url 'complaint_list' %}" class="option-btn">
+                    📋 My Complaints
+                </a>
+                {% if user.role == 'citizen' %}
+                <a href="{% url 'create_complaint' %}" class="option-btn">
+                    📝 Quick Report
+                </a>
+                {% endif %}
+                <!-- Removed password change link -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.location.href = "{% url 'dashboard' %}";
+        }
+        if (e.key === 'l' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            document.querySelector('form').submit();
+        }
+    });
+    
+    // Add confirmation for logout
+    const logoutForm = document.querySelector('form');
+    logoutForm.addEventListener('submit', function(e) {
+        const confirmed = confirm('Are you sure you want to log out?');
+        if (!confirmed) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

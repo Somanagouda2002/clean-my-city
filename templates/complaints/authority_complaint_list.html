@@ -1,0 +1,97 @@
+<!-- templates/complaints/authority_complaint_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}My Assignments - Clean My City{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>My Assignments</h1>
+        <p>Complaints assigned to you for resolution</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="get">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="assigned" {% if current_status == 'assigned' %}selected{% endif %}>Assigned</option>
+                        <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="resolved" {% if current_status == 'resolved' %}selected{% endif %}>Resolved</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Urgency</label>
+                    <select name="urgency" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Urgency</option>
+                        <option value="low" {% if current_urgency == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if current_urgency == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if current_urgency == 'high' %}selected{% endif %}>High</option>
+                        <option value="critical" {% if current_urgency == 'critical' %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Complaints List -->
+    <div class="complaints-table">
+        {% if complaints %}
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Complaint</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Urgency</th>
+                            <th>Location</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in complaints %}
+                        <tr>
+                            <td>
+                                <div class="complaint-title">{{ complaint.title }}</div>
+                                <div class="complaint-meta">{{ complaint.description|truncatewords:10 }}</div>
+                            </td>
+                            <td>{{ complaint.category.name }}</td>
+                            <td>
+                                <span class="status-badge status-{{ complaint.status }}">
+                                    {{ complaint.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="urgency-badge urgency-{{ complaint.urgency }}">
+                                    {{ complaint.get_urgency_display }}
+                                </span>
+                            </td>
+                            <td>{{ complaint.location|truncatewords:3 }}</td>
+                            <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'complaint_detail' complaint.id %}" class="btn-sm btn-view">View</a>
+                                    <a href="{% url 'update_complaint_status' complaint.id %}" class="btn-sm btn-update">Update</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div>📝</div>
+                <h3>No assignments found</h3>
+                <p>You don't have any complaints assigned to you with the current filters.</p>
+                <a href="{% url 'authority_complaint_list' %}" class="btn">Clear Filters</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

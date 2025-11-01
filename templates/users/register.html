@@ -1,0 +1,637 @@
+<!-- templates/users/register.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - Clean My City{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .auth-title {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+
+    .auth-subtitle {
+        color: #666;
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3498db;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .form-control.error {
+        border-color: #e74c3c;
+        background: #fdf2f2;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-hint {
+        color: #666;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .role-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .role-option {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+
+    .role-option:hover {
+        border-color: #3498db;
+        background: #e3f2fd;
+    }
+
+    .role-option.selected {
+        border-color: #3498db;
+        background: #3498db;
+        color: white;
+    }
+
+    .role-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .role-name {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .role-desc {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        margin-top: 0.25rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #219a52 0%, #27ae60 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .auth-link {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .auth-link:hover {
+        text-decoration: underline;
+    }
+
+    .password-strength {
+        margin-top: 0.5rem;
+    }
+
+    .strength-bar {
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+    }
+
+    .strength-fill {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s;
+        border-radius: 2px;
+    }
+
+    .strength-weak { background: #e74c3c; width: 25%; }
+    .strength-fair { background: #f39c12; width: 50%; }
+    .strength-good { background: #3498db; width: 75%; }
+    .strength-strong { background: #27ae60; width: 100%; }
+
+    .strength-text {
+        font-size: 0.75rem;
+        color: #666;
+    }
+
+    .terms-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .terms-check input {
+        margin-top: 0.25rem;
+    }
+
+    .terms-label {
+        font-size: 0.875rem;
+        color: #666;
+        line-height: 1.4;
+    }
+
+    .terms-link {
+        color: #3498db;
+        text-decoration: none;
+    }
+
+    .terms-link:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+        .auth-container {
+            margin: 1rem auto;
+        }
+
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .role-selection {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .input-with-icon {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Header -->
+        <div class="auth-header">
+            <div class="auth-icon">🏙️</div>
+            <h1 class="auth-title">Join Clean My City</h1>
+            <p class="auth-subtitle">Create your account and help keep our city clean</p>
+        </div>
+
+        <!-- Registration Form -->
+        <form method="post" id="registerForm">
+            {% csrf_token %}
+            
+            <!-- Role Selection -->
+            <div class="form-group">
+                <label class="form-label">I want to join as:</label>
+                <div class="role-selection">
+                    <div class="role-option" data-role="citizen" onclick="selectRole('citizen')">
+                        <span class="role-icon">👤</span>
+                        <div class="role-name">Citizen</div>
+                        <div class="role-desc">Report issues</div>
+                    </div>
+                    <div class="role-option" data-role="authority" onclick="selectRole('authority')">
+                        <span class="role-icon">🏢</span>
+                        <div class="role-name">Authority</div>
+                        <div class="role-desc">Resolve issues</div>
+                    </div>
+                </div>
+                <input type="hidden" name="role" id="roleInput" value="citizen" required>
+                {% if form.role.errors %}
+                <div class="error-message">
+                    ⚠️ {{ form.role.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Personal Information -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="id_first_name" class="form-label">First Name</label>
+                    <input type="text" 
+                           name="first_name" 
+                           id="id_first_name" 
+                           class="form-control" 
+                           placeholder="Enter your first name"
+                           value="{{ form.first_name.value|default:'' }}"
+                           required>
+                    {% if form.first_name.errors %}
+                    <div class="error-message">
+                        ⚠️ {{ form.first_name.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_last_name" class="form-label">Last Name</label>
+                    <input type="text" 
+                           name="last_name" 
+                           id="id_last_name" 
+                           class="form-control" 
+                           placeholder="Enter your last name"
+                           value="{{ form.last_name.value|default:'' }}"
+                           required>
+                    {% if form.last_name.errors %}
+                    <div class="error-message">
+                        ⚠️ {{ form.last_name.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="form-group">
+                <label for="id_username" class="form-label">Username</label>
+                <input type="text" 
+                       name="username" 
+                       id="id_username" 
+                       class="form-control" 
+                       placeholder="Choose a username"
+                       value="{{ form.username.value|default:'' }}"
+                       required>
+                {% if form.username.errors %}
+                <div class="error-message">
+                    ⚠️ {{ form.username.errors }}
+                </div>
+                {% endif %}
+                <div class="form-hint">This will be your unique identifier</div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_email" class="form-label">Email Address</label>
+                <input type="email" 
+                       name="email" 
+                       id="id_email" 
+                       class="form-control" 
+                       placeholder="your@email.com"
+                       value="{{ form.email.value|default:'' }}"
+                       required>
+                {% if form.email.errors %}
+                <div class="error-message">
+                    ⚠️ {{ form.email.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_phone_number" class="form-label">Phone Number</label>
+                <input type="tel" 
+                       name="phone_number" 
+                       id="id_phone_number" 
+                       class="form-control" 
+                       placeholder="+91 1234567890"
+                       value="{{ form.phone_number.value|default:'' }}">
+                {% if form.phone_number.errors %}
+                <div class="error-message">
+                    ⚠️ {{ form.phone_number.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="id_password1" class="form-label">Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" 
+                               name="password1" 
+                               id="id_password1" 
+                               class="form-control" 
+                               placeholder="Create password"
+                               required
+                               oninput="checkPasswordStrength(this.value)">
+                        <span class="input-icon" onclick="togglePassword('id_password1')">👁️</span>
+                    </div>
+                    {% if form.password1.errors %}
+                    <div class="error-message">
+                        ⚠️ {{ form.password1.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="passwordStrength"></div>
+                        </div>
+                        <div class="strength-text" id="passwordStrengthText">Password strength</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password2" class="form-label">Confirm Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" 
+                               name="password2" 
+                               id="id_password2" 
+                               class="form-control" 
+                               placeholder="Confirm password"
+                               required
+                               oninput="checkPasswordMatch()">
+                        <span class="input-icon" onclick="togglePassword('id_password2')">👁️</span>
+                    </div>
+                    {% if form.password2.errors %}
+                    <div class="error-message">
+                        ⚠️ {{ form.password2.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="form-hint" id="passwordMatchText">Passwords must match</div>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="form-group">
+                <label for="id_address" class="form-label">Address</label>
+                <textarea name="address" 
+                          id="id_address" 
+                          class="form-control" 
+                          rows="3" 
+                          placeholder="Enter your full address">{{ form.address.value|default:'' }}</textarea>
+                {% if form.address.errors %}
+                <div class="error-message">
+                    ⚠️ {{ form.address.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Department (for authorities) -->
+            <div class="form-group" id="departmentField" style="display: none;">
+                <label for="id_department" class="form-label">Department</label>
+                <input type="text" 
+                       name="department" 
+                       id="id_department" 
+                       class="form-control" 
+                       placeholder="Enter your department name"
+                       value="{{ form.department.value|default:'' }}">
+                {% if form.department.errors %}
+                <div class="error-message">
+                    ⚠️ {{ form.department.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="terms-check">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms" class="terms-label">
+                    I agree to the <a href="#" class="terms-link">Terms of Service</a> and 
+                    <a href="#" class="terms-link">Privacy Policy</a>. I understand that my data will be 
+                    used to improve city services and maintain cleanliness.
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit" id="submitBtn">
+                🚀 Create Account
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'login' %}" class="auth-link">Sign in here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Role selection
+    function selectRole(role) {
+        // Update visual selection
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        document.querySelector(`[data-role="${role}"]`).classList.add('selected');
+        
+        // Update hidden input
+        document.getElementById('roleInput').value = role;
+        
+        // Show/hide department field
+        const departmentField = document.getElementById('departmentField');
+        if (role === 'authority') {
+            departmentField.style.display = 'block';
+            document.getElementById('id_department').required = true;
+        } else {
+            departmentField.style.display = 'none';
+            document.getElementById('id_department').required = false;
+        }
+    }
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        let strength = 0;
+        let text = 'Password strength';
+        let className = '';
+        
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+        if (password.match(/\d/)) strength++;
+        if (password.match(/[^a-zA-Z\d]/)) strength++;
+        
+        switch(strength) {
+            case 0:
+                text = 'Very weak';
+                className = 'strength-weak';
+                break;
+            case 1:
+                text = 'Weak';
+                className = 'strength-weak';
+                break;
+            case 2:
+                text = 'Fair';
+                className = 'strength-fair';
+                break;
+            case 3:
+                text = 'Good';
+                className = 'strength-good';
+                break;
+            case 4:
+                text = 'Strong';
+                className = 'strength-strong';
+                break;
+        }
+        
+        strengthBar.className = 'strength-fill ' + className;
+        strengthText.textContent = text;
+        strengthText.style.color = getComputedStyle(strengthBar).backgroundColor;
+    }
+
+    // Password match checker
+    function checkPasswordMatch() {
+        const password1 = document.getElementById('id_password1').value;
+        const password2 = document.getElementById('id_password2').value;
+        const matchText = document.getElementById('passwordMatchText');
+        
+        if (password2 === '') {
+            matchText.textContent = 'Passwords must match';
+            matchText.style.color = '#666';
+        } else if (password1 === password2) {
+            matchText.textContent = '✓ Passwords match';
+            matchText.style.color = '#27ae60';
+        } else {
+            matchText.textContent = '✗ Passwords do not match';
+            matchText.style.color = '#e74c3c';
+        }
+    }
+
+    // Toggle password visibility
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.parentNode.querySelector('.input-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.textContent = '🔒';
+        } else {
+            field.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
+    // Form validation
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '🔄 Creating account...';
+        submitBtn.disabled = true;
+        
+        // Basic validation
+        const password1 = document.getElementById('id_password1').value;
+        const password2 = document.getElementById('id_password2').value;
+        const terms = document.getElementById('terms').checked;
+        
+        if (password1 !== password2) {
+            e.preventDefault();
+            alert('Passwords do not match. Please check and try again.');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+        
+        if (!terms) {
+            e.preventDefault();
+            alert('Please agree to the Terms of Service and Privacy Policy.');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+        
+        // Form will submit if all validations pass
+    });
+
+    // Initialize role selection
+    document.addEventListener('DOMContentLoaded', function() {
+        selectRole('citizen'); // Default selection
+    });
+</script>
+{% endblock %}
